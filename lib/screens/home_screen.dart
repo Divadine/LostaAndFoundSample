@@ -1,0 +1,193 @@
+import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:map_initialization/screens/map_screen.dart';
+import 'package:map_initialization/screens/setting_screen.dart';
+import 'package:map_initialization/sharedpreference/shared_preference.dart';
+import 'package:map_initialization/utils/color_utils.dart';
+import 'package:map_initialization/utils/font_utils.dart';
+import 'package:map_initialization/utils/tab_mobile_size.dart';
+
+import '../models/lost_items.dart';
+
+class MapApp extends StatefulWidget{
+
+  const MapApp({super.key});
+  @override
+  State<MapApp> createState() => _MapAppState();
+}
+
+
+
+
+
+
+class _MapAppState extends State<MapApp> {
+
+  LatLng? selectedLocation;
+  DateTime? selectedDate;
+  TextEditingController itemNameCtrl = TextEditingController();
+  TextEditingController descriptionCtrl = TextEditingController();
+  TextEditingController categoryCtrl = TextEditingController();
+  TextEditingController locationCtrl = TextEditingController();
+
+  List<LostItems> lostItems = [];
+
+  CameraPosition initialPosition = CameraPosition(target: LatLng(28.683649090758525, 77.09355437945047),zoom: 12,);
+
+  Future<void> selectDate() async{
+   final  pickedDate = await showDatePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      initialDate: DateTime.now(),
+
+    );
+   if(pickedDate != null ){
+   setState(() {
+   selectedDate = pickedDate;
+   });
+   }
+  }
+
+  Future<void> selectLocation()  async {
+    final LatLng? location = await Navigator.push(context, MaterialPageRoute(builder: (_) => MapScreen()));
+
+    if(location != null)  {
+      setState(() {
+        selectedLocation = location;
+      });
+    }
+
+  }
+
+  void onSubmit() {
+
+    if(itemNameCtrl.text.isEmpty || descriptionCtrl.text.isEmpty || categoryCtrl.text.isEmpty || selectedLocation == null ||  selectedDate == null ){
+     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: FontUtils(text: 'Please check all the fields',style: AppTextStyle(fontWeight: FontWeight.bold,fontFamily: AppPreference.getFont(),fontSize: ResponsiveSizes.value(context, mobile: 18 , tablet: 25)),)));
+     return;
+    }
+
+    final item = LostItems(
+        itemName: itemNameCtrl.text,
+        description: descriptionCtrl.text,
+        categoryType: categoryCtrl.text,
+        location:selectedLocation!,
+        lostDate: selectedDate ?? DateTime.now()
+    );
+
+    setState(() {
+      lostItems.add(item);
+      selectedDate = null;
+    });
+
+    itemNameCtrl.clear();
+    descriptionCtrl.clear();
+    categoryCtrl.clear();
+    locationCtrl.clear();
+  }
+
+
+  @override
+  Widget build (BuildContext context){
+    return Scaffold(
+      drawer: SettingsScreen(),
+      appBar: AppBar(
+
+        backgroundColor: AppPreference.getTheme() ? Colors.black : AppColor.defaultColor,
+        leading:Builder(
+            builder: (context){
+              return IconButton(onPressed: (){
+                Scaffold.of(context).openDrawer();
+              }, icon: Icon(Icons.settings,color: Colors.white,));
+            }),
+        title: FontUtils(text: 'Map Locator',style: AppTextStyle(fontFamily:AppPreference.getFont(),fontWeight: FontWeight.bold,fontSize: ResponsiveSizes.value(context, mobile: 20, tablet: 25),color: AppColor.secondaryColor),),
+        centerTitle: true,
+      ),
+
+      body: Padding(
+        padding: EdgeInsets.all(ResponsiveSizes.value(context, mobile: 20, tablet: 35)),
+        child: Column(
+          children: [
+            Column(
+              children: [
+                TextField(
+                  controller: itemNameCtrl,
+                  decoration: InputDecoration(border: OutlineInputBorder(),hintText: 'enter your item ',contentPadding: EdgeInsets.all(12)),
+                ),
+                SizedBox(height: 15,),
+                TextField(
+                  controller: descriptionCtrl,
+                  decoration: InputDecoration(border: OutlineInputBorder(),hintText: 'Description ',contentPadding: EdgeInsets.all(12)),
+                ),
+                SizedBox(height: 15,),
+                TextField(
+                  controller: categoryCtrl,
+                  decoration: InputDecoration(border: OutlineInputBorder(),hintText: 'category ',contentPadding: EdgeInsets.all(12)),
+                ),
+                SizedBox(height: 15,),
+
+
+
+                // TextField(
+                //   controller: locationCtrl,
+                //   decoration: InputDecoration(border: OutlineInputBorder(),hintText: 'location',contentPadding: EdgeInsets.all(12)),
+                // ),
+
+                ListTile(
+                  title: FontUtils(text: selectedLocation == null ? 'select location' : '${selectedLocation!.latitude.toStringAsFixed(4)},${selectedLocation!.longitude.toStringAsFixed(4)} '),
+                  trailing: Icon(Icons.location_on),
+                  onTap: selectLocation,
+                ),
+
+
+
+                SizedBox(height: 15,),
+
+                ListTile(
+                  tileColor: Colors.transparent,
+
+                  title: FontUtils(
+                      text: selectedDate == null ? 'Select Lost Date' : selectedDate.toString().split(' ')[0]),
+
+                  trailing: const Icon(Icons.calendar_month),
+                  onTap: selectDate,
+                ),
+              ],
+            ),
+
+            SizedBox(height: 30,),
+
+            // submit button
+
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: AppPreference.getTheme() ? Colors.black : AppColor.defaultColor),
+                onPressed: onSubmit,
+
+                child: FontUtils(text: 'Submit',style: AppTextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: ResponsiveSizes.value(context, mobile: 18, tablet: 24)),)
+            ),
+
+
+            Expanded(
+              child: ListView.builder(
+                itemCount: lostItems.length,
+
+                  itemBuilder: (context,index){
+                    final items = lostItems[index];
+                    return ListTile(
+                      title: FontUtils(text: items.itemName),
+                      subtitle: FontUtils(
+                        text:
+                        '${items.location.latitude.toStringAsFixed(4)}, '
+                            '${items.location.longitude.toStringAsFixed(4)}',
+                      ),
+                      trailing: FontUtils(text: items.categoryType),
+                    );
+                  }),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
