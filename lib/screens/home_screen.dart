@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
+//import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:map_initialization/database/db.dart';
 import 'package:map_initialization/screens/map_screen.dart';
 import 'package:map_initialization/screens/setting_screen.dart';
 import 'package:map_initialization/sharedpreference/shared_preference.dart';
@@ -19,13 +23,14 @@ class MapApp extends StatefulWidget{
 
 
 
-
-
-
 class _MapAppState extends State<MapApp> {
 
   LatLng? selectedLocation;
   DateTime? selectedDate;
+  File? selectedImage;
+
+  final ImagePicker picker = ImagePicker();
+
   TextEditingController itemNameCtrl = TextEditingController();
   TextEditingController descriptionCtrl = TextEditingController();
   TextEditingController categoryCtrl = TextEditingController();
@@ -35,6 +40,18 @@ class _MapAppState extends State<MapApp> {
 
   CameraPosition initialPosition = CameraPosition(target: LatLng(28.683649090758525, 77.09355437945047),zoom: 12,);
 
+  @override
+  void initState() {
+    super.initState();
+    loadLostItems();
+  }
+
+  Future<void> loadLostItems() async{
+    final data = await DbHelper.instance.getLostItems();
+    setState(() {
+      lostItems = data;
+    });
+  }
   Future<void> selectDate() async{
    final  pickedDate = await showDatePicker(
       context: context,
@@ -61,7 +78,7 @@ class _MapAppState extends State<MapApp> {
 
   }
 
-  void onSubmit() {
+  void onSubmit() async {
 
     if(itemNameCtrl.text.isEmpty || descriptionCtrl.text.isEmpty || categoryCtrl.text.isEmpty || selectedLocation == null ||  selectedDate == null ){
      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: FontUtils(text: 'Please check all the fields',style: AppTextStyle(fontWeight: FontWeight.bold,fontFamily: AppPreference.getFont(),fontSize: ResponsiveSizes.value(context, mobile: 18 , tablet: 25)),)));
@@ -73,18 +90,77 @@ class _MapAppState extends State<MapApp> {
         description: descriptionCtrl.text,
         categoryType: categoryCtrl.text,
         location:selectedLocation!,
-        lostDate: selectedDate ?? DateTime.now()
+        lostDate: selectedDate ?? DateTime.now(),
+        picture: selectedImage?.path,
     );
+
+    await DbHelper.instance.insertLostItems(item);
 
     setState(() {
       lostItems.add(item);
+
       selectedDate = null;
+      selectedLocation = null;
     });
+
 
     itemNameCtrl.clear();
     descriptionCtrl.clear();
     categoryCtrl.clear();
-    locationCtrl.clear();
+
+    loadLostItems();
+
+  }
+
+
+  Future<void> photoFromCamera() async {
+    final XFile?  pic = await picker.pickImage(source: ImageSource.camera);
+
+    if(pic != null) {
+      setState(() {
+        selectedImage = File(pic.path) ;
+      });
+    }
+
+  }
+
+  Future<void> photoFromGallery() async {
+    final XFile? pic = await picker.pickImage(source: ImageSource.gallery);
+
+    if(pic != null){
+      setState(() {
+        selectedImage =File(pic.path) ;
+      });
+    }
+  }
+
+  void showImagePicker(){
+    showModalBottomSheet(
+        context: context,
+        builder: (context) {
+          return Wrap(
+            children: [
+              ListTile(
+                leading: Icon(Icons.camera_alt),
+                title: FontUtils(text: 'Camera'),
+                onTap: (){
+                  photoFromCamera();
+                  Navigator.pop(context);
+                },
+              ),
+
+
+              ListTile(
+                leading: Icon(Icons.browse_gallery),
+                title: FontUtils(text: 'Gallery'),
+                onTap: (){
+                  photoFromGallery();
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          );
+        },);
   }
 
 
@@ -156,7 +232,17 @@ class _MapAppState extends State<MapApp> {
               ],
             ),
 
-            SizedBox(height: 30,),
+            SizedBox(height: 20,),
+
+            ListTile(
+                onTap:showImagePicker,
+              title: FontUtils(text: 'Upload Pic'),
+              trailing: FontUtils(text: selectedImage == null
+                  ? 'No Image' : selectedImage!.path.split('/').last),
+            ),
+
+
+            SizedBox(height: ResponsiveSizes.value(context, mobile: 30, tablet: 55),),
 
             // submit button
 
@@ -173,7 +259,7 @@ class _MapAppState extends State<MapApp> {
                 itemCount: lostItems.length,
 
                   itemBuilder: (context,index){
-                    final items = lostItems[index];
+                    final items = lostItems[lostItems.length - 1 - index];
                     return ListTile(
                       title: FontUtils(text: items.itemName),
                       subtitle: FontUtils(

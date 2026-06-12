@@ -40,7 +40,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             //title
             Container(
               color: AppPreference.getTheme() ? Colors.black : AppColor.defaultColor,
-              padding: EdgeInsets.only(top: 60,left: 15),
+              padding:EdgeInsets.only(top: ResponsiveSizes.value(context, mobile: 80, tablet: 100),left: ResponsiveSizes.value(context, mobile: 15, tablet: 15),),
               height: ResponsiveSizes.value(context, mobile: 120, tablet: 150),
               width: double.infinity,
               child: FontUtils(textAlign:TextAlign.left,text: 'Settings',style: AppTextStyle(fontFamily:AppPreference.getFont(),fontWeight: FontWeight.bold,fontSize: 18,color: AppColor.secondaryColor),),
@@ -51,7 +51,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Expanded(child: ListView(children: [
               ListTile(
                 leading: Icon(Icons.format_color_text),
-                title: FontUtils(text: 'Themes Color',style: AppTextStyle(fontSize: ResponsiveSizes.value(context, mobile: 14, tablet: 18),fontWeight: FontWeight.bold),),
+                title: FontUtils(text: 'Font Themes ',style: AppTextStyle(fontSize: ResponsiveSizes.value(context, mobile: 14, tablet: 18),fontWeight: FontWeight.bold),),
                 onTap: (){
                   Navigator.push(context, MaterialPageRoute(builder: (_) => FontStyles()));
                 },

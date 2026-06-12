@@ -58,7 +58,7 @@ class _FontStyleState extends State<FontStyles> {
           Container(
             height: 500,
             decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppPreference.getTheme() ? Colors.black : Colors.white,
                 borderRadius: BorderRadius.circular(20),
             ),
             child: Column(
