@@ -357,7 +357,8 @@ class _FoundItemsScreenState extends State<FoundItemsScreen> {
 
 
             Expanded(
-              child: ListView.builder(
+              child: GridView.builder(
+                gridDelegate:SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 1,mainAxisSpacing: 1,crossAxisSpacing: 4,childAspectRatio: 8 ),
                  itemCount: foundItems.length,
 
                   itemBuilder: (context,index){
@@ -373,8 +374,9 @@ class _FoundItemsScreenState extends State<FoundItemsScreen> {
                             '${items.location.longitude.toStringAsFixed(4)}',
                       ),
                       trailing: FontUtils(text: items.categoryType),
+
                     );
-                  }),
+                  },  ),
             )
           ],
         ),
