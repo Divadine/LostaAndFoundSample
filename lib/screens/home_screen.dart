@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:map_initialization/database/db.dart';
+import 'package:map_initialization/screens/found_items_add.dart';
 import 'package:map_initialization/screens/map_screen.dart';
 import 'package:map_initialization/screens/setting_screen.dart';
 import 'package:map_initialization/sharedpreference/shared_preference.dart';
@@ -92,6 +93,7 @@ class _MapAppState extends State<MapApp> {
         location:selectedLocation!,
         lostDate: selectedDate ?? DateTime.now(),
         picture: selectedImage?.path,
+
     );
 
     await DbHelper.instance.insertLostItems(item);
@@ -101,12 +103,15 @@ class _MapAppState extends State<MapApp> {
 
       selectedDate = null;
       selectedLocation = null;
+      selectedImage = null;
+
     });
 
 
     itemNameCtrl.clear();
     descriptionCtrl.clear();
     categoryCtrl.clear();
+
 
     loadLostItems();
 
@@ -136,29 +141,42 @@ class _MapAppState extends State<MapApp> {
 
   void showImagePicker(){
     showModalBottomSheet(
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+    borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+    ),
         context: context,
         builder: (context) {
-          return Wrap(
-            children: [
-              ListTile(
-                leading: Icon(Icons.camera_alt),
-                title: FontUtils(text: 'Camera'),
-                onTap: (){
-                  photoFromCamera();
-                  Navigator.pop(context);
-                },
-              ),
+
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 20,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            ),
+            child: Wrap(
+              children: [
+                ListTile(
+                  leading: Icon(Icons.camera_alt),
+                  title: FontUtils(text: 'Camera'),
+                  onTap: (){
+                    photoFromCamera();
+                    Navigator.pop(context);
+                  },
+                ),
 
 
-              ListTile(
-                leading: Icon(Icons.browse_gallery),
-                title: FontUtils(text: 'Gallery'),
-                onTap: (){
-                  photoFromGallery();
-                  Navigator.pop(context);
-                },
-              ),
-            ],
+                ListTile(
+                  leading: Icon(Icons.browse_gallery),
+                  title: FontUtils(text: 'Gallery'),
+                  onTap: (){
+                    photoFromGallery();
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
           );
         },);
   }
@@ -261,6 +279,9 @@ class _MapAppState extends State<MapApp> {
                   itemBuilder: (context,index){
                     final items = lostItems[lostItems.length - 1 - index];
                     return ListTile(
+                      leading: SizedBox(height: 50,width: 50,
+                        child: Image.file(File(items.picture!)),
+                      ),
                       title: FontUtils(text: items.itemName),
                       subtitle: FontUtils(
                         text:
@@ -273,6 +294,14 @@ class _MapAppState extends State<MapApp> {
             )
           ],
         ),
+      ),
+
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppColor.defaultColor,
+          onPressed: (){
+           Navigator.push(context, MaterialPageRoute(builder: (_) => FoundItemsScreen()));
+          },
+          child: Icon(Icons.add,color: Colors.white,size: 35,),
       ),
     );
   }

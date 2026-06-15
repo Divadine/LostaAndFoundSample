@@ -59,9 +59,11 @@ class MapScreenState extends State<MapScreen> {
 
             GoogleMap(
               initialCameraPosition: initialPosition,
+
                 onMapCreated: (controller) {
                   mapController = controller;
                 },
+
               onTap: (LatLng location){
                 setState(() {
                   selectedLocation =location;

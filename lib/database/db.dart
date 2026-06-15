@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:map_initialization/models/found_items.dart';
 import 'package:map_initialization/models/lost_items.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -37,17 +38,37 @@ class DbHelper {
       lostDate TEXT,
       latitude REAL,
       longitude REAL,
-      picture TEXT
+      picture TEXT,
+      status TEXT
       
       ) 
       ''');
+
+
+
+      await data.execute('''
+      
+      CREATE TABLE found_items(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      itemName TEXT,
+      description TEXT,
+      categoryType TEXT,
+      foundDate TEXT,
+      latitude REAL,
+      longitude REAL,
+      picture TEXT,
+      status TEXT
+      ) 
+      ''');
+
+
     }
     );
   }
 
 
 
-  //insert data's
+  //insert lost item data's
 
   Future insertLostItems(LostItems lostItems) async{
     final dbClient = await database;
@@ -61,5 +82,23 @@ class DbHelper {
     final data = await dbClient.query('lost_items',);
     return data.map((e) => LostItems.fromJson(e)).toList();
   }
+
+  //insert found item data's
+
+  Future insertFoundItems(FoundItems foundItems) async {
+    final dbClient = await database;
+
+    return await dbClient.insert('found_items', foundItems.toMap(),conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future getFoundItems() async {
+    final dbClient = await database;
+
+    final data = await dbClient.query('found_items');
+    return data.map((e) => FoundItems.fromJson(e)).toList();
+  }
+
+
+
 
 }
