@@ -13,6 +13,7 @@ void main() async{
 
 StreamController<bool> themeCtrl = StreamController.broadcast();
 StreamController<String> fontCtrl = StreamController.broadcast();
+//StreamController<Color> colorCtrl = StreamController.broadcast();
 
 class MapLocalization extends StatelessWidget {
   const MapLocalization( {super.key});

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:map_initialization/screens/theme_color.dart';
 import 'package:map_initialization/sharedpreference/shared_preference.dart';
 import 'package:map_initialization/utils/color_utils.dart';
 import 'package:map_initialization/utils/font_utils.dart';
@@ -48,7 +49,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
 
             //theme
-            Expanded(child: ListView(children: [
+            Expanded(
+                child: ListView(children: [
               ListTile(
                 leading: Icon(Icons.format_color_text),
                 title: FontUtils(text: 'Font Themes ',style: AppTextStyle(fontSize: ResponsiveSizes.value(context, mobile: 14, tablet: 18),fontWeight: FontWeight.bold),),
@@ -76,7 +78,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                     }
                     ),
-              )
+              ),
+
+
+              ListTile(
+                leading: Icon(Icons.color_lens),
+                title: FontUtils(text: 'Themes Color',style:  AppTextStyle(fontWeight: FontWeight.bold,fontFamily: AppPreference.getFont(),fontSize: ResponsiveSizes.value(context, mobile: 14, tablet: 18),)),
+                onTap: (){
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => ThemeColor()));
+                },
+              ),
             ],))
           ],
         ),

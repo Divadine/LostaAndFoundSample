@@ -376,7 +376,8 @@ class _FoundItemsScreenState extends State<FoundItemsScreen> {
                       trailing: FontUtils(text: items.categoryType),
 
                     );
-                  },  ),
+                  },
+              ),
             )
           ],
         ),
