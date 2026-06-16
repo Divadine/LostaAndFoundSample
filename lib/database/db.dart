@@ -39,7 +39,8 @@ class DbHelper {
       latitude REAL,
       longitude REAL,
       picture TEXT,
-      status TEXT
+      status TEXT,
+      address TEXT
       
       ) 
       ''');
@@ -57,7 +58,8 @@ class DbHelper {
       latitude REAL,
       longitude REAL,
       picture TEXT,
-      status TEXT
+      status TEXT,
+      address TEXT
       ) 
       ''');
 

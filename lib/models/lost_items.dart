@@ -10,8 +10,9 @@ class LostItems {
   final DateTime lostDate;
   final LatLng location;
   final String? picture;
+  final String? address;
 
-  const LostItems({required this.itemName, required this.description, required this.categoryType, required this.lostDate, required this.location, this.picture});
+  const LostItems({required this.itemName, required this.description, required this.categoryType, required this.lostDate, required this.location, this.picture, this.address});
 
   factory LostItems.fromJson(Map<String,dynamic> json) {
     return LostItems(
@@ -20,7 +21,8 @@ class LostItems {
         categoryType: json['categoryType'],
       location: LatLng(json['latitude'], json['longitude']),
         lostDate: DateTime.parse(json['lostDate']),
-      picture: json['picture']
+      picture: json['picture'],
+        address:json['address']
     );
   }
 
@@ -33,6 +35,7 @@ class LostItems {
       'latitude': location.latitude,
       'longitude': location.longitude,
       'picture':picture,
+      'address' : address,
       //'location':location,
     };
   }

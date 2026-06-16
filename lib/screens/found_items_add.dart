@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:map_initialization/models/found_items.dart';
@@ -58,6 +59,13 @@ class _FoundItemsScreenState extends State<FoundItemsScreen> {
   }
 
 
+  Future<String> getAddress(double lat, double log) async {
+    List<Placemark> placeMarks = await placemarkFromCoordinates(lat, log);
+
+    Placemark place = placeMarks.first;
+
+    return '${place.street}, ${place.administrativeArea}';
+  }
 
   List<MatchResult> findMatches(FoundItems foundItems,List<LostItems>  lostItems ) {
 
@@ -101,6 +109,7 @@ class _FoundItemsScreenState extends State<FoundItemsScreen> {
 
   void onSubmit() async {
 
+   String  address = await getAddress(selectedLocation!.latitude, selectedLocation!.longitude);
     if(itemNameCtrl.text.isEmpty || descriptionCtrl.text.isEmpty || categoryCtrl.text.isEmpty || selectedLocation == null ||  selectedDate == null ){
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: FontUtils(text: 'Please check all the fields',style: AppTextStyle(fontWeight: FontWeight.bold,fontFamily: AppPreference.getFont(),fontSize: ResponsiveSizes.value(context, mobile: 18 , tablet: 25)),)));
       return;
@@ -113,15 +122,14 @@ class _FoundItemsScreenState extends State<FoundItemsScreen> {
       location: selectedLocation!,
       foundDate: selectedDate!,
       picture: selectedImage?.path,
-
+        address:address,
 
     );
 
     await DbHelper.instance.insertFoundItems(foundItem);
 
     final lostItems = await DbHelper.instance.getLostItems();
-
-
+    if (!mounted) return;
     final matches = findMatches(foundItem, lostItems);
 
     if (matches.isNotEmpty) {
@@ -146,6 +154,7 @@ class _FoundItemsScreenState extends State<FoundItemsScreen> {
                     subtitle: Text(
                       "Score: ${match.score}%",
                     ),
+                    trailing: Text(lostItems[index].address!) ,
                   );
                 },
               ),
@@ -357,8 +366,8 @@ class _FoundItemsScreenState extends State<FoundItemsScreen> {
 
 
             Expanded(
-              child: GridView.builder(
-                gridDelegate:SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 1,mainAxisSpacing: 1,crossAxisSpacing: 4,childAspectRatio: 8 ),
+              child: ListView.builder(
+
                  itemCount: foundItems.length,
 
                   itemBuilder: (context,index){
@@ -369,9 +378,9 @@ class _FoundItemsScreenState extends State<FoundItemsScreen> {
                       ),
                       title: FontUtils(text: items.itemName),
                       subtitle: FontUtils(
-                        text:
-                        '${items.location.latitude.toStringAsFixed(4)}, '
-                            '${items.location.longitude.toStringAsFixed(4)}',
+                        text:items.address!,
+                        // '${items.location.latitude.toStringAsFixed(4)}, '
+                        //     '${items.location.longitude.toStringAsFixed(4)}',
                       ),
                       trailing: FontUtils(text: items.categoryType),
 

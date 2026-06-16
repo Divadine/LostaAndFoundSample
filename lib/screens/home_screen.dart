@@ -1,7 +1,5 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
-//import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:map_initialization/database/db.dart';
@@ -12,8 +10,8 @@ import 'package:map_initialization/sharedpreference/shared_preference.dart';
 import 'package:map_initialization/utils/color_utils.dart';
 import 'package:map_initialization/utils/font_utils.dart';
 import 'package:map_initialization/utils/tab_mobile_size.dart';
-
 import '../models/lost_items.dart';
+import 'package:geocoding/geocoding.dart';
 
 class MapApp extends StatefulWidget{
 
@@ -29,6 +27,7 @@ class _MapAppState extends State<MapApp> {
   LatLng? selectedLocation;
   DateTime? selectedDate;
   File? selectedImage;
+  late final String address;
 
   final ImagePicker picker = ImagePicker();
 
@@ -78,8 +77,21 @@ class _MapAppState extends State<MapApp> {
     }
 
   }
+  Future<String> getAddress(double lat, double lng) async {
+    List<Placemark> placemarks =
+    await placemarkFromCoordinates(lat, lng);
+
+    Placemark place = placemarks.first;
+
+    return '${place.locality}, ${place.administrativeArea}';
+  }
 
   void onSubmit() async {
+
+    String address = await getAddress(
+      selectedLocation!.latitude,
+      selectedLocation!.longitude,
+    );
 
     if(itemNameCtrl.text.isEmpty || descriptionCtrl.text.isEmpty || categoryCtrl.text.isEmpty || selectedLocation == null ||  selectedDate == null ){
      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: FontUtils(text: 'Please check all the fields',style: AppTextStyle(fontWeight: FontWeight.bold,fontFamily: AppPreference.getFont(),fontSize: ResponsiveSizes.value(context, mobile: 18 , tablet: 25)),)));
@@ -93,8 +105,10 @@ class _MapAppState extends State<MapApp> {
         location:selectedLocation!,
         lostDate: selectedDate ?? DateTime.now(),
         picture: selectedImage?.path,
-
+      address: address,
     );
+
+
 
     await DbHelper.instance.insertLostItems(item);
 
@@ -284,9 +298,10 @@ class _MapAppState extends State<MapApp> {
                       ),
                       title: FontUtils(text: items.itemName),
                       subtitle: FontUtils(
-                        text:
-                        '${items.location.latitude.toStringAsFixed(4)}, '
-                            '${items.location.longitude.toStringAsFixed(4)}',
+                        text:items.address!,
+
+                        // '${items.location.latitude.toStringAsFixed(4)},'
+                        //     '${items.location.longitude.toStringAsFixed(4)}',
                       ),
                       trailing: FontUtils(text: items.categoryType),
                     );
@@ -297,7 +312,7 @@ class _MapAppState extends State<MapApp> {
       ),
 
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColor.defaultColor,
+        backgroundColor: AppPreference.getTheme() ? Colors.black : AppColor.defaultColor,
           onPressed: (){
            Navigator.push(context, MaterialPageRoute(builder: (_) => FoundItemsScreen()));
           },

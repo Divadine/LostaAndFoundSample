@@ -10,8 +10,9 @@ class FoundItems {
   final LatLng location;
   final String? picture;
   final String? status;
+  final String? address;
 
-  const FoundItems({required this.itemName, required this.description, required this.categoryType, required this.foundDate, required this.location, this.picture, this.status});
+  const FoundItems({required this.itemName, required this.description, required this.categoryType, required this.foundDate, required this.location, this.picture, this.status, this.address});
 
   factory FoundItems.fromJson(Map<String,dynamic> json) {
     return FoundItems(
@@ -21,6 +22,7 @@ class FoundItems {
       foundDate: DateTime.parse(json['foundDate']),
         location: LatLng(json['latitude'], json['longitude']),
         picture:json['picture'],
+        address:json['address'],
 
     );
   }
@@ -36,6 +38,7 @@ class FoundItems {
       'longitude': location.longitude,
       'picture':picture,
       'status' : status,
+      'address':address,
 
     };
   }
