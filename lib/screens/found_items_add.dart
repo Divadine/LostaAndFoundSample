@@ -13,6 +13,7 @@ import 'package:map_initialization/utils/tab_mobile_size.dart';
 import '../database/db.dart';
 import '../models/lost_items.dart';
 import '../models/match_results.dart';
+import '../sharedwidget/founditems_list.dart';
 import 'map_screen.dart';
 
 class FoundItemsScreen extends StatefulWidget{
@@ -148,13 +149,13 @@ class _FoundItemsScreenState extends State<FoundItemsScreen> {
 
                   return ListTile(
                     leading: SizedBox(height: 50,width: 50,
-                      child: Image.file(File(match.lostItem.picture!),fit: BoxFit.cover,),
+                      child: Image.file(File(match.lostItem!.picture!),fit: BoxFit.cover,),
                     ),
-                    title: Text(match.lostItem.itemName),
+                    title: Text(match.lostItem!.itemName),
                     subtitle: Text(
                       "Score: ${match.score}%",
                     ),
-                    trailing: Text(lostItems[index].address!) ,
+                    trailing: Text(match.lostItem!.address!) ,
                   );
                 },
               ),
@@ -291,106 +292,113 @@ class _FoundItemsScreenState extends State<FoundItemsScreen> {
       ),
 
 
-      body: Padding(
-        padding: EdgeInsets.all(ResponsiveSizes.value(context, mobile: 20, tablet: 35)),
-        child: Column(
-          children: [
-            Column(
-              children: [
-                TextField(
-                  controller: itemNameCtrl,
-                  decoration: InputDecoration(border: OutlineInputBorder(),hintText: 'enter your item ',contentPadding: EdgeInsets.all(12)),
-                ),
-                SizedBox(height: 15,),
-                TextField(
-                  controller: descriptionCtrl,
-                  decoration: InputDecoration(border: OutlineInputBorder(),hintText: 'Description ',contentPadding: EdgeInsets.all(12)),
-                ),
-                SizedBox(height: 15,),
-                TextField(
-                  controller: categoryCtrl,
-                  decoration: InputDecoration(border: OutlineInputBorder(),hintText: 'category ',contentPadding: EdgeInsets.all(12)),
-                ),
-                SizedBox(height: 15,),
-
-
-
-                // TextField(
-                //   controller: locationCtrl,
-                //   decoration: InputDecoration(border: OutlineInputBorder(),hintText: 'location',contentPadding: EdgeInsets.all(12)),
-                // ),
-
-                ListTile(
-                  title: FontUtils(text: selectedLocation == null ? 'select location' : '${selectedLocation!.latitude.toStringAsFixed(4)},${selectedLocation!.longitude.toStringAsFixed(4)} '),
-                  trailing: Icon(Icons.location_on),
-                  onTap: selectLocation,
-                ),
-
-
-
-                SizedBox(height: 15,),
-
-                ListTile(
-                  tileColor: Colors.transparent,
-
-                  title: FontUtils(
-                      text: selectedDate == null ? 'Select Found Date' : selectedDate.toString().split(' ')[0]),
-
-                  trailing: const Icon(Icons.calendar_month),
-                 onTap: selectDate,
-                ),
-              ],
-            ),
-
-            SizedBox(height: 20,),
-
-            ListTile(
-             onTap:showImagePicker,
-              title: FontUtils(text: 'Upload Pic'),
-              trailing: FontUtils(text: selectedImage == null
-                  ? 'No Image' : selectedImage!.path.split('/').last),
-            ),
-
-
-            SizedBox(height: ResponsiveSizes.value(context, mobile: 30, tablet: 55),),
-
-            // submit button
-
-            ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: AppPreference.getTheme() ? Colors.black : AppColor.defaultColor),
-                onPressed: onSubmit,
-
-
-                child: FontUtils(text: 'Submit',style: AppTextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: ResponsiveSizes.value(context, mobile: 18, tablet: 24)),)
-            ),
-
-
-            Expanded(
-              child: ListView.builder(
-
-                 itemCount: foundItems.length,
-
-                  itemBuilder: (context,index){
-                    final items = foundItems[foundItems.length - 1 - index];
-                    return ListTile(
-                      leading: SizedBox(height: 50,width: 50,
-                        child: Image.file(File(items.picture!)),
-                      ),
-                      title: FontUtils(text: items.itemName),
-                      subtitle: FontUtils(
-                        text:items.address!,
-                        // '${items.location.latitude.toStringAsFixed(4)}, '
-                        //     '${items.location.longitude.toStringAsFixed(4)}',
-                      ),
-                      trailing: FontUtils(text: items.categoryType),
-
-                    );
-                  },
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.all(ResponsiveSizes.value(context, mobile: 20, tablet: 35)),
+          child: Column(
+            children: [
+              Column(
+                children: [
+                  TextField(
+                    controller: itemNameCtrl,
+                    decoration: InputDecoration(border: OutlineInputBorder(),hintText: 'enter your item ',contentPadding: EdgeInsets.all(12)),
+                  ),
+                  SizedBox(height: 15,),
+                  TextField(
+                    controller: descriptionCtrl,
+                    decoration: InputDecoration(border: OutlineInputBorder(),hintText: 'Description ',contentPadding: EdgeInsets.all(12)),
+                  ),
+                  SizedBox(height: 15,),
+                  TextField(
+                    controller: categoryCtrl,
+                    decoration: InputDecoration(border: OutlineInputBorder(),hintText: 'category ',contentPadding: EdgeInsets.all(12)),
+                  ),
+                  SizedBox(height: 15,),
+        
+        
+        
+                  // TextField(
+                  //   controller: locationCtrl,
+                  //   decoration: InputDecoration(border: OutlineInputBorder(),hintText: 'location',contentPadding: EdgeInsets.all(12)),
+                  // ),
+        
+                  ListTile(
+                    title: FontUtils(text: selectedLocation == null ? 'select location' : '${selectedLocation!.latitude.toStringAsFixed(4)},${selectedLocation!.longitude.toStringAsFixed(4)} '),
+                    trailing: Icon(Icons.location_on),
+                    onTap: selectLocation,
+                  ),
+        
+        
+                  SizedBox(height: 15,),
+        
+                  ListTile(
+                    tileColor: Colors.transparent,
+        
+                    title: FontUtils(
+                        text: selectedDate == null ? 'Select Found Date' : selectedDate.toString().split(' ')[0]),
+        
+                    trailing: const Icon(Icons.calendar_month),
+                   onTap: selectDate,
+                  ),
+                ],
               ),
-            )
-          ],
+        
+              SizedBox(height: 20,),
+        
+              ListTile(
+               onTap:showImagePicker,
+                title: FontUtils(text: 'Upload Pic'),
+                trailing: FontUtils(text: selectedImage == null
+                    ? 'No Image' : selectedImage!.path.split('/').last),
+              ),
+        
+        
+              SizedBox(height: ResponsiveSizes.value(context, mobile: 30, tablet: 55),),
+        
+              // submit button
+        
+              ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: AppPreference.getTheme() ? Colors.black : AppColor.defaultColor),
+                  onPressed: onSubmit,
+        
+        
+                  child: FontUtils(text: 'Submit',style: AppTextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: ResponsiveSizes.value(context, mobile: 18, tablet: 24)),)
+              ),
+        
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child:Row(
+        
+            children: List.generate(foundItems.length, (index) => Padding(padding: EdgeInsets.all(10),child: FoundItemsLists(foundItems: foundItems[index],),)),
+          )
+        )
+            ],
+          ),
         ),
       ),
+
+            // ListView.builder(
+            //
+            //    itemCount: foundItems.length,
+            //
+            //     itemBuilder: (context,index){
+            //       final items = foundItems[foundItems.length - 1 - index];
+            //       return ListTile(
+            //         leading: SizedBox(height: 50,width: 50,
+            //           child: Image.file(File(items.picture!)),
+            //         ),
+            //         title: FontUtils(text: items.itemName),
+            //         subtitle: FontUtils(
+            //           text:items.address!,
+            //           // '${items.location.latitude.toStringAsFixed(4)}, '
+            //           //     '${items.location.longitude.toStringAsFixed(4)}',
+            //         ),
+            //         trailing: FontUtils(text: items.categoryType),
+            //
+            //       );
+            //     },
+            // )
     );
   }
 }
+

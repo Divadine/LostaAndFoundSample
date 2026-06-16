@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:map_initialization/database/db.dart';
+import 'package:map_initialization/models/found_items.dart';
+import 'package:map_initialization/models/match_results.dart';
 import 'package:map_initialization/screens/found_items_add.dart';
 import 'package:map_initialization/screens/map_screen.dart';
 import 'package:map_initialization/screens/setting_screen.dart';
@@ -12,6 +14,8 @@ import 'package:map_initialization/utils/font_utils.dart';
 import 'package:map_initialization/utils/tab_mobile_size.dart';
 import '../models/lost_items.dart';
 import 'package:geocoding/geocoding.dart';
+
+import '../sharedwidget/lostitems_lists.dart';
 
 class MapApp extends StatefulWidget{
 
@@ -86,6 +90,51 @@ class _MapAppState extends State<MapApp> {
     return '${place.locality}, ${place.administrativeArea}';
   }
 
+  List<MatchResult> findMatches(LostItems lostItems, List<FoundItems> foundItems) {
+    List<MatchResult> matches =[];
+
+    for(var found in foundItems){
+
+      int score = 0;
+
+      print("Checking ${found.itemName}");
+      if(found.categoryType.toLowerCase() == lostItems.categoryType.toLowerCase()){
+        score +=30;
+      }
+      print("Category +30");
+
+      if(found.itemName.toLowerCase().contains(lostItems.itemName.toLowerCase()) || lostItems.itemName.toLowerCase().contains(found.itemName.toLowerCase())){
+        score +=30;
+      }
+      print("Name +30");
+
+     int  dayDifference = lostItems.lostDate.difference(found.foundDate).inDays.abs();
+      if(dayDifference <= 7){
+        score += 20;
+      }
+      print("Day Difference: $dayDifference");
+
+      double latDiff = (found.location.latitude - lostItems.location.latitude).abs();
+      double logDiff = (found.location.longitude - lostItems.location.longitude).abs();
+
+      if(latDiff  < 0.02 && logDiff < 0.02){
+        score +=20;
+        print("Final Score: $score");
+      }
+      print("LatDiff: $latDiff");
+      print("LngDiff: $logDiff");
+
+      print("Final Score: $score");
+      if(score > 50){
+        matches.add(MatchResult(foundItem: found, score: score, lostItem: null));
+      }
+    }
+    matches.sort((a,b) => b.score.compareTo(a.score));
+
+    return matches;
+  }
+
+
   void onSubmit() async {
 
     String address = await getAddress(
@@ -112,6 +161,55 @@ class _MapAppState extends State<MapApp> {
 
     await DbHelper.instance.insertLostItems(item);
 
+    final foundItems = await DbHelper.instance.getFoundItems();
+
+    print("Found Items Count: ${foundItems.length}");
+
+
+    if(!mounted) return;
+    final matches = findMatches(item,foundItems);
+
+    print("Matches Count: ${matches.length}");
+
+
+    if(matches.isNotEmpty) {
+      showDialog(
+          context: context,
+          builder: (_){
+            return AlertDialog(
+              title: const Text("Possible Matches"),
+
+              content: SizedBox(
+                height: 300,
+                width: double.infinity,
+                child: ListView.builder(
+                  itemCount: matches.length,
+                    shrinkWrap: true,
+                    itemBuilder: (context,index){
+                      final match = matches[index];
+                      return ListTile(
+                        leading: SizedBox(height: 50,width: 50,
+                        child: Image.file(File(match.foundItem!.picture!),fit: BoxFit.cover,),
+                        ),
+
+                        title: Text(match.foundItem!.itemName),
+
+                        subtitle: Text(
+                          " Score ${match.score}%"
+                        ),
+
+                        trailing: Text(match.foundItem!.address!) ,
+                      );
+                    }
+                ),
+              ) ,
+            );
+          }
+      );
+    }
+
+
+
     setState(() {
       lostItems.add(item);
 
@@ -127,7 +225,7 @@ class _MapAppState extends State<MapApp> {
     categoryCtrl.clear();
 
 
-    loadLostItems();
+    await loadLostItems();
 
   }
 
@@ -213,101 +311,112 @@ class _MapAppState extends State<MapApp> {
         centerTitle: true,
       ),
 
-      body: Padding(
-        padding: EdgeInsets.all(ResponsiveSizes.value(context, mobile: 20, tablet: 35)),
-        child: Column(
-          children: [
-            Column(
-              children: [
-                TextField(
-                  controller: itemNameCtrl,
-                  decoration: InputDecoration(border: OutlineInputBorder(),hintText: 'enter your item ',contentPadding: EdgeInsets.all(12)),
-                ),
-                SizedBox(height: 15,),
-                TextField(
-                  controller: descriptionCtrl,
-                  decoration: InputDecoration(border: OutlineInputBorder(),hintText: 'Description ',contentPadding: EdgeInsets.all(12)),
-                ),
-                SizedBox(height: 15,),
-                TextField(
-                  controller: categoryCtrl,
-                  decoration: InputDecoration(border: OutlineInputBorder(),hintText: 'category ',contentPadding: EdgeInsets.all(12)),
-                ),
-                SizedBox(height: 15,),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.all(ResponsiveSizes.value(context, mobile: 20, tablet: 35)),
+          child: Column(
+            children: [
+              Column(
+                children: [
+                  TextField(
+                    controller: itemNameCtrl,
+                    decoration: InputDecoration(border: OutlineInputBorder(),hintText: 'enter your item ',contentPadding: EdgeInsets.all(12)),
+                  ),
+                  SizedBox(height: 15,),
+                  TextField(
+                    controller: descriptionCtrl,
+                    decoration: InputDecoration(border: OutlineInputBorder(),hintText: 'Description ',contentPadding: EdgeInsets.all(12)),
+                  ),
+                  SizedBox(height: 15,),
+                  TextField(
+                    controller: categoryCtrl,
+                    decoration: InputDecoration(border: OutlineInputBorder(),hintText: 'category ',contentPadding: EdgeInsets.all(12)),
+                  ),
+                  SizedBox(height: 15,),
+        
+        
+        
+                  // TextField(
+                  //   controller: locationCtrl,
+                  //   decoration: InputDecoration(border: OutlineInputBorder(),hintText: 'location',contentPadding: EdgeInsets.all(12)),
+                  // ),
+        
+                  ListTile(
+                    title: FontUtils(text: selectedLocation == null ? 'select location' : '${selectedLocation!.latitude.toStringAsFixed(4)},${selectedLocation!.longitude.toStringAsFixed(4)} '),
+                    trailing: Icon(Icons.location_on),
+                    onTap: selectLocation,
+                  ),
+        
+        
+        
+                  SizedBox(height: 15,),
+        
+                  ListTile(
+                    tileColor: Colors.transparent,
+        
+                    title: FontUtils(
+                        text: selectedDate == null ? 'Select Lost Date' : selectedDate.toString().split(' ')[0]),
+        
+                    trailing: const Icon(Icons.calendar_month),
+                    onTap: selectDate,
+                  ),
+                ],
+              ),
+        
+              SizedBox(height: 20,),
+        
+              ListTile(
+                  onTap:showImagePicker,
+                title: FontUtils(text: 'Upload Pic'),
+                trailing: FontUtils(text: selectedImage == null
+                    ? 'No Image' : selectedImage!.path.split('/').last),
+              ),
+        
+        
+              SizedBox(height: ResponsiveSizes.value(context, mobile: 30, tablet: 55),),
+        
+              // submit button
+        
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: AppPreference.getTheme() ? Colors.black : AppColor.defaultColor),
+                  onPressed: onSubmit,
+        
+                  child: FontUtils(text: 'Submit',style: AppTextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: ResponsiveSizes.value(context, mobile: 18, tablet: 24)),)
+              ),
+        
+        
+              SizedBox(height: 20,),
+        
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child:Row(
 
-
-
-                // TextField(
-                //   controller: locationCtrl,
-                //   decoration: InputDecoration(border: OutlineInputBorder(),hintText: 'location',contentPadding: EdgeInsets.all(12)),
+                  children: List.generate(lostItems.length, (index) => Padding(padding: EdgeInsets.all(10),child: LostItemsLists(lostItems: lostItems[index],),)),
+                )
+                // ListView.builder(
+                //   //gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: ),
+                //   itemCount: lostItems.length,
+                //
+                //     itemBuilder: (context,index){
+                //       final items = lostItems[lostItems.length - 1 - index];
+                //       return ListTile(
+                //         leading: SizedBox(height: 50,width: 50,
+                //           child: Image.file(File(items.picture!)),
+                //         ),
+                //         title: FontUtils(text: items.itemName),
+                //         subtitle: FontUtils(
+                //           text:items.address!,
+                //
+                //           // '${items.location.latitude.toStringAsFixed(4)},'
+                //           //     '${items.location.longitude.toStringAsFixed(4)}',
+                //         ),
+                //         trailing: FontUtils(text: items.categoryType),
+                //       );
+                //     },
                 // ),
-
-                ListTile(
-                  title: FontUtils(text: selectedLocation == null ? 'select location' : '${selectedLocation!.latitude.toStringAsFixed(4)},${selectedLocation!.longitude.toStringAsFixed(4)} '),
-                  trailing: Icon(Icons.location_on),
-                  onTap: selectLocation,
-                ),
-
-
-
-                SizedBox(height: 15,),
-
-                ListTile(
-                  tileColor: Colors.transparent,
-
-                  title: FontUtils(
-                      text: selectedDate == null ? 'Select Lost Date' : selectedDate.toString().split(' ')[0]),
-
-                  trailing: const Icon(Icons.calendar_month),
-                  onTap: selectDate,
-                ),
-              ],
-            ),
-
-            SizedBox(height: 20,),
-
-            ListTile(
-                onTap:showImagePicker,
-              title: FontUtils(text: 'Upload Pic'),
-              trailing: FontUtils(text: selectedImage == null
-                  ? 'No Image' : selectedImage!.path.split('/').last),
-            ),
-
-
-            SizedBox(height: ResponsiveSizes.value(context, mobile: 30, tablet: 55),),
-
-            // submit button
-
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppPreference.getTheme() ? Colors.black : AppColor.defaultColor),
-                onPressed: onSubmit,
-
-                child: FontUtils(text: 'Submit',style: AppTextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: ResponsiveSizes.value(context, mobile: 18, tablet: 24)),)
-            ),
-
-
-            Expanded(
-              child: ListView.builder(
-                itemCount: lostItems.length,
-
-                  itemBuilder: (context,index){
-                    final items = lostItems[lostItems.length - 1 - index];
-                    return ListTile(
-                      leading: SizedBox(height: 50,width: 50,
-                        child: Image.file(File(items.picture!)),
-                      ),
-                      title: FontUtils(text: items.itemName),
-                      subtitle: FontUtils(
-                        text:items.address!,
-
-                        // '${items.location.latitude.toStringAsFixed(4)},'
-                        //     '${items.location.longitude.toStringAsFixed(4)}',
-                      ),
-                      trailing: FontUtils(text: items.categoryType),
-                    );
-                  }),
-            )
-          ],
+              )
+            ],
+          ),
         ),
       ),
 

@@ -26,8 +26,6 @@ class DbHelper {
 
     return await openDatabase(databasesPath,version: 1,onCreate: (data,version) async {
 
-
-
       await data.execute('''
       
       CREATE TABLE lost_items(
@@ -99,6 +97,7 @@ class DbHelper {
     final data = await dbClient.query('found_items');
     return data.map((e) => FoundItems.fromJson(e)).toList();
   }
+
 
 
 
