@@ -84,8 +84,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ListTile(
                 leading: Icon(Icons.color_lens),
                 title: FontUtils(text: 'Themes Color',style:  AppTextStyle(fontWeight: FontWeight.bold,fontFamily: AppPreference.getFont(),fontSize: ResponsiveSizes.value(context, mobile: 14, tablet: 18),)),
-                onTap: (){
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => ThemeColor()));
+                onTap: () async {
+                  final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => ThemeColor()));
+                  if( result != null) {
+                    setState(() {
+
+                    });
+                  }
                 },
               ),
             ],))

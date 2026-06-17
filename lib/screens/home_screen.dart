@@ -67,7 +67,7 @@ class _MapAppState extends State<MapApp> {
       drawer: SettingsScreen(),
       appBar: AppBar(
 
-        backgroundColor: AppPreference.getTheme() ? Colors.black : AppColor.defaultColor,
+
         leading:Builder(
             builder: (context){
               return IconButton(onPressed: (){
@@ -76,6 +76,7 @@ class _MapAppState extends State<MapApp> {
             }),
         title: FontUtils(text: 'Lost And Found',style: AppTextStyle(fontFamily:AppPreference.getFont(),fontWeight: FontWeight.bold,fontSize: ResponsiveSizes.value(context, mobile: 20, tablet: 25),color: AppColor.secondaryColor),),
         centerTitle: true,
+        backgroundColor: AppPreference.getTheme() ? Colors.black : AppColor.defaultColor,
       ),
 
      body: Padding(

@@ -109,6 +109,7 @@ class _ThemeColorState extends State<ThemeColor> {
                           setState(() {
                             // because of this whole app theme color changing not because of stream builder
                             AppColor.defaultColor = Color(colorsTheme[selectedIndex]);
+
                           });
                         } else {
                           Navigator.pop(context);
@@ -116,7 +117,10 @@ class _ThemeColorState extends State<ThemeColor> {
                         
                         //colorCtrl.sink.add(Color(colorsTheme[selectedIndex]));
 
+
+
                         Navigator.pop(context, selectedIndex);
+
                       },
                       child: FontUtils(text: 'Apply',style: AppTextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontFamily: AppPreference.getFont(),fontSize: ResponsiveSizes.value(context, mobile: 20, tablet: 25)),))
 
