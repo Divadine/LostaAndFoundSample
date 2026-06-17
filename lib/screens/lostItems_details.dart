@@ -5,8 +5,12 @@ import 'package:map_initialization/utils/color_utils.dart';
 import 'package:map_initialization/utils/font_utils.dart';
 import 'package:map_initialization/utils/tab_mobile_size.dart';
 
+import '../sharedwidget/details_alignment.dart';
+
 class LostItemsDetails extends StatefulWidget {
+
   final LostItems lostItems;
+
   const LostItemsDetails({super.key, required this.lostItems});
 
   @override
@@ -14,6 +18,9 @@ class LostItemsDetails extends StatefulWidget {
 }
 
 class _LostItemsDetailsState extends State<LostItemsDetails> {
+
+  //TextEditingController itemNameCtrl = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,6 +37,22 @@ class _LostItemsDetailsState extends State<LostItemsDetails> {
 
       ),
 
+
+      body: Padding(
+          padding: EdgeInsets.all(10),
+        child: Column(
+          children: [
+
+            DetailsAlignment(title: 'Item Name ', value: widget.lostItems.itemName,),
+            DetailsAlignment(title: 'description ', value: widget.lostItems.description,),
+            DetailsAlignment(title: 'category Type ', value: widget.lostItems.categoryType,),
+            DetailsAlignment(title: 'address', value: widget.lostItems.address ?? '',),
+            DetailsAlignment(title: 'Lost Date ', value: widget.lostItems.lostDate.toString().split(' ').first,),
+
+
+          ],
+        ),
+      ),
     );
   }
 }
