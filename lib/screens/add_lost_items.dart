@@ -47,12 +47,16 @@ class _AddLostItemsState extends State<AddLostItems> {
 
   Future<void> loadLostItems() async{
     final data = await DbHelper.instance.getLostItems();
+
+    data.sort((a,b) => b.lostDate.compareTo(a.lostDate));
+
     setState(() {
       lostItems = data;
     });
   }
 
   Future<void> selectDate() async{
+
     final  pickedDate = await showDatePicker(
       context: context,
       firstDate: DateTime(2020),
@@ -65,6 +69,44 @@ class _AddLostItemsState extends State<AddLostItems> {
         selectedDate = pickedDate;
       });
     }
+
+    if(!mounted) return ;
+
+    final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+    );
+
+    if(pickedTime != null) {
+
+      setState(() {
+        selectedDate = DateTime(pickedDate!.year ,pickedDate.month,pickedDate.day,pickedTime.hour,pickedTime.minute);
+      });
+    }
+  }
+
+  String getDateLabel(DateTime date) {
+    final now = DateTime.now();
+
+    final today = DateTime(now.year, now.month, now.day);
+    final itemDate = DateTime(date.year, date.month, date.day);
+
+    final diff = today.difference(itemDate).inDays;
+
+    if (diff == 0) return 'Today';
+    if (diff == 1) return 'Yesterday';
+    return '$diff days ago';
+
+
+  }
+
+  String formatTime(DateTime date) {
+    final hour =
+    date.hour > 12 ? date.hour - 12 : (date.hour == 0 ? 12 : date.hour);
+
+    final period = date.hour >= 12 ? 'PM' : 'AM';
+
+    return '$hour:${date.minute.toString().padLeft(2, '0')} $period';
   }
 
   Future<void> selectLocation()  async {
@@ -191,10 +233,18 @@ class _AddLostItemsState extends State<AddLostItems> {
                           child: match.foundItem?.picture != null &&  File(match.foundItem!.picture!).existsSync() ? Image.file(File(match.foundItem!.picture!),fit: BoxFit.cover,) : const Icon(Icons.image),
                         ),
 
-                        title: Text(match.foundItem!.itemName),
+                        title: Row(
+                          children: [
+                            Text(match.foundItem!.itemName),
+                            SizedBox(width: 7,),
+                            Text(" Score ${match.score}%"),
+                          ],
+                        ),
 
                         subtitle: Text(
-                            " Score ${match.score}%"
+                          '${getDateLabel(item.lostDate)} • ${formatTime(item.lostDate)}'
+                              '${item.lostDate.hour}:${item.lostDate.minute.toString().padLeft(2, '0')}',
+                           // " Score ${match.score}%"
                         ),
 
                         trailing: Text(match.foundItem!.address!) ,
@@ -352,7 +402,7 @@ class _AddLostItemsState extends State<AddLostItems> {
           tileColor: Colors.transparent,
 
           title: FontUtils(
-              text: selectedDate == null ? 'Select Lost Date' : selectedDate.toString().split(' ')[0],maxLines: 1,textOverflow: TextOverflow.ellipsis,),
+              text: selectedDate == null ? 'Select Lost Date and Time' : '${selectedDate!.day} / ${selectedDate!.month}/${selectedDate!.year} ' '${selectedDate!.hour}:${selectedDate!.minute}',maxLines: 1,textOverflow: TextOverflow.ellipsis,),
 
           trailing: const Icon(Icons.calendar_month),
           onTap: selectDate,

@@ -47,12 +47,20 @@ class _MapAppState extends State<MapApp> {
 
   Future<void> loadLostItems() async{
     final data = await DbHelper.instance.getLostItems();
+
+    data.sort((a,b) => b.lostDate.compareTo(a.lostDate));
     setState(() {
       lostItems = data;
     });
+
+
   }
   Future<void> loadFoundItems() async {
     final data = await DbHelper.instance.getFoundItems();
+
+    print("Found Items Count: ${data.length}");
+
+    data.sort((FoundItems  a,FoundItems  b) => b.foundDate.compareTo(a.foundDate));
 
     setState(() {
       foundItems = data;
@@ -104,7 +112,7 @@ class _MapAppState extends State<MapApp> {
 
                  IconButton(
                      onPressed: () async {
-                       Navigator.push(context, MaterialPageRoute(builder: (_) => AddLostItems()));
+                       await Navigator.push(context, MaterialPageRoute(builder: (_) => AddLostItems()));
                        await loadLostItems();
                        //await loadFoundItems();
                      },
@@ -160,7 +168,7 @@ class _MapAppState extends State<MapApp> {
 
                  IconButton(
                      onPressed: () async {
-                       Navigator.push(context, MaterialPageRoute(builder: (_) => AddFoundItems()));
+                       await Navigator.push(context, MaterialPageRoute(builder: (_) => AddFoundItems()));
 
                        await loadLostItems();
                        await loadFoundItems();

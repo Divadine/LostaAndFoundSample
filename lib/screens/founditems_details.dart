@@ -17,6 +17,16 @@ class FoundItemsDetails extends StatefulWidget {
 }
 
 class _FoundItemsDetailsState extends State<FoundItemsDetails> {
+
+  String formatTime(DateTime date) {
+    final hour =
+    date.hour > 12 ? date.hour - 12 : (date.hour == 0 ? 12 : date.hour);
+
+    final period = date.hour >= 12 ? 'PM' : 'AM';
+
+    return '$hour:${date.minute.toString().padLeft(2, '0')} $period';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,7 +52,7 @@ class _FoundItemsDetailsState extends State<FoundItemsDetails> {
             DetailsAlignment(title: 'description ', value: widget.foundItems.description,),
             DetailsAlignment(title: 'category Type ', value: widget.foundItems.categoryType,),
             DetailsAlignment(title: 'address', value: widget.foundItems.address ?? '',),
-            DetailsAlignment(title: 'Lost Date ', value: widget.foundItems.foundDate.toString().split(' ').first,),
+            DetailsAlignment(title: 'Found Date ', value: '${widget.foundItems.foundDate.toString().split(' ').first }     '   '${formatTime(widget.foundItems.foundDate)}'),
 
           ],
         ),
@@ -50,3 +60,6 @@ class _FoundItemsDetailsState extends State<FoundItemsDetails> {
     );
   }
 }
+
+
+

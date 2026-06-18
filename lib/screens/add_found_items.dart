@@ -51,10 +51,37 @@ class _AddFoundItemsState extends State<AddFoundItems> {
   Future<void> loadFoundMatched() async{
      final data =  await DbHelper.instance.getFoundItems();
 
+     data.sort((FoundItems a, FoundItems b) => b.foundDate.compareTo(a.foundDate));
+
      setState(() {
        foundItems = data;
      });
-    }
+  }
+
+  String getDateLabel(DateTime date) {
+    final now = DateTime.now();
+
+    final today = DateTime(now.year, now.month, now.day);
+    final itemDate = DateTime(date.year, date.month, date.day);
+
+    final diff = today.difference(itemDate).inDays;
+
+    if (diff == 0) return 'Today';
+    if (diff == 1) return 'Yesterday';
+    return '$diff days ago';
+  }
+
+
+  String formatTime(DateTime date) {
+    final hour =
+    date.hour > 12 ? date.hour - 12 : (date.hour == 0 ? 12 : date.hour);
+
+    final period = date.hour >= 12 ? 'PM' : 'AM';
+
+    return '$hour:${date.minute.toString().padLeft(2, '0')} $period';
+  }
+
+
 
   Future<void> selectDate() async{
     final  pickedDate = await showDatePicker(
@@ -67,6 +94,18 @@ class _AddFoundItemsState extends State<AddFoundItems> {
     if(pickedDate != null ){
       setState(() {
         selectedDate = pickedDate;
+      });
+    }
+    if(!mounted) return ;
+
+    final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+    );
+
+    if(pickedTime != null){
+      setState(() {
+        selectedDate = DateTime(pickedDate!.year,pickedDate.month,pickedDate.day,pickedTime.hour,pickedTime.minute);
       });
     }
   }
@@ -195,13 +234,21 @@ class _AddFoundItemsState extends State<AddFoundItems> {
                           child: match.lostItem?.picture != null && File(match.lostItem!.picture!).existsSync() ? Image.file(File(match.lostItem!.picture!),fit: BoxFit.cover,): const Icon(Icons.image),
                         ),
 
-                        title: Text(match.lostItem!.itemName),
-
-                        subtitle: Text(
-                            " Score ${match.score}%"
+                        title: Row(
+                          children: [
+                            Text(match.lostItem!.itemName),
+                            SizedBox(width: 7,),
+                            Text(" Score ${match.score}%"),
+                          ],
                         ),
 
-                        //trailing: Text(match.lostItem!.address! ),
+                        // subtitle: Text(
+                        //   '${getDateLabel(item.foundDate)} • ${formatTime(item.foundDate)}'
+                        //       '${item.foundDate.hour}:${item.foundDate.minute.toString().padLeft(2, '0')}',
+                        //    // " Score ${match.score}%"
+                        // ),
+
+                        trailing: Text(match.lostItem!.address! ),
                           //(match.lostItem!.address!) ,match.lostItem?.address ?? "Unknown",
                       );
                     }
@@ -367,7 +414,7 @@ class _AddFoundItemsState extends State<AddFoundItems> {
                     tileColor: Colors.transparent,
 
                     title: FontUtils(
-                      text: selectedDate == null ? 'Select Lost Date' : selectedDate.toString().split(' ')[0],maxLines: 1,textOverflow: TextOverflow.ellipsis,),
+                      text: selectedDate == null ? 'Select Found Date' : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}' '${selectedDate!.hour}:${selectedDate!.minute}',maxLines: 1,textOverflow: TextOverflow.ellipsis,),
 
                     trailing: const Icon(Icons.calendar_month),
                     onTap: selectDate,

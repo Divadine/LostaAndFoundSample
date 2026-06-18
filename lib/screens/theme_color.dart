@@ -99,6 +99,8 @@ class _ThemeColorState extends State<ThemeColor> {
                     },
                     child: Text('cancel',style: AppTextStyle(fontWeight: FontWeight.bold,fontFamily: AppPreference.getFont(),fontSize: ResponsiveSizes.value(context, mobile: 20, tablet: 25)),),
                   ),
+
+
                   
                   
                   

@@ -21,6 +21,15 @@ class _LostItemsDetailsState extends State<LostItemsDetails> {
 
   //TextEditingController itemNameCtrl = TextEditingController();
 
+  String formatTime(DateTime date) {
+    final hour =
+    date.hour > 12 ? date.hour - 12 : (date.hour == 0 ? 12 : date.hour);
+
+    final period = date.hour >= 12 ? 'PM' : 'AM';
+
+    return '$hour:${date.minute.toString().padLeft(2, '0')} $period';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,7 +56,7 @@ class _LostItemsDetailsState extends State<LostItemsDetails> {
             DetailsAlignment(title: 'description ', value: widget.lostItems.description,),
             DetailsAlignment(title: 'category Type ', value: widget.lostItems.categoryType,),
             DetailsAlignment(title: 'address', value: widget.lostItems.address ?? '',),
-            DetailsAlignment(title: 'Lost Date ', value: widget.lostItems.lostDate.toString().split(' ').first,),
+            DetailsAlignment(title: 'Lost Date ', value: '${widget.lostItems.lostDate.toString().split(' ').first}        '    '${formatTime(widget.lostItems.lostDate)}',),
 
 
           ],
