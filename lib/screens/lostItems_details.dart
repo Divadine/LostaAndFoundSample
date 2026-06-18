@@ -57,7 +57,7 @@ class _LostItemsDetailsState extends State<LostItemsDetails> {
             DetailsAlignment(title: 'category Type ', value: widget.lostItems.categoryType,),
             DetailsAlignment(title: 'address', value: widget.lostItems.address ?? '',),
             DetailsAlignment(title: 'Lost Date ', value: '${widget.lostItems.lostDate.toString().split(' ').first}        '    '${formatTime(widget.lostItems.lostDate)}',),
-
+            DetailsAlignment(title: 'status', value: widget.lostItems.status ?? 'Lost'),
 
           ],
         ),

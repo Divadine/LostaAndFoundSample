@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class FoundItems {
-
+  final int? id;
   final String itemName;
   final String description;
   final String categoryType;
@@ -12,10 +12,12 @@ class FoundItems {
   final String? status;
   final String? address;
 
-  const FoundItems({required this.itemName, required this.description, required this.categoryType, required this.foundDate, required this.location, this.picture, this.status, this.address});
+
+  const FoundItems({required this.itemName, required this.description, required this.categoryType, required this.foundDate, required this.location, this.picture, this.status, this.address, this.id});
 
   factory FoundItems.fromJson(Map<String,dynamic> json) {
     return FoundItems(
+      id: json['id'],
         itemName: json['itemName'],
         description: json['description'],
         categoryType: json['categoryType'],
@@ -23,6 +25,7 @@ class FoundItems {
         location: LatLng(json['latitude'], json['longitude']),
         picture:json['picture'],
         address:json['address'],
+        status:json['status'],
 
     );
   }
@@ -30,6 +33,7 @@ class FoundItems {
 
   Map<String,dynamic> toMap() {
     return {
+      'id':id,
       'itemName' : itemName,
       'description':description,
       'categoryType':categoryType,

@@ -68,6 +68,7 @@ class _AddFoundItemsState extends State<AddFoundItems> {
 
     if (diff == 0) return 'Today';
     if (diff == 1) return 'Yesterday';
+
     return '$diff days ago';
   }
 
@@ -196,6 +197,7 @@ class _AddFoundItemsState extends State<AddFoundItems> {
       foundDate: selectedDate ?? DateTime.now(),
       picture: selectedImage?.path,
       address: address,
+        status:'Found',
     );
 
 
@@ -215,6 +217,10 @@ class _AddFoundItemsState extends State<AddFoundItems> {
 
 
     if(matches.isNotEmpty) {
+
+      await DbHelper.instance.updateLostStatus(matches.first.lostItem!.id!, "Matched");
+
+
       showDialog(
           context: context,
           builder: (_){

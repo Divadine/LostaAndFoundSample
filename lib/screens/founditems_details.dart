@@ -53,7 +53,7 @@ class _FoundItemsDetailsState extends State<FoundItemsDetails> {
             DetailsAlignment(title: 'category Type ', value: widget.foundItems.categoryType,),
             DetailsAlignment(title: 'address', value: widget.foundItems.address ?? '',),
             DetailsAlignment(title: 'Found Date ', value: '${widget.foundItems.foundDate.toString().split(' ').first }     '   '${formatTime(widget.foundItems.foundDate)}'),
-
+            DetailsAlignment(title: 'status', value: widget.foundItems.status ?? 'Found'),
           ],
         ),
       ),

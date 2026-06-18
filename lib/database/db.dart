@@ -99,6 +99,20 @@ class DbHelper {
   }
 
 
+  Future<void> updateLostStatus(int id , String status) async {
+
+    final dbClient = await database;
+
+    await dbClient.update('lost_items', {'status':status}, where: 'id = ?',whereArgs: [id]);
+  }
+
+
+  Future<void> updateFoundStatus(int id , String status) async {
+
+    final dbClient = await database;
+
+    await dbClient.update('found_items', {'status':status}, where: 'id = ?',whereArgs: [id]);
+  }
 
 
 

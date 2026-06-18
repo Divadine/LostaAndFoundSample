@@ -48,7 +48,7 @@ class _AddLostItemsState extends State<AddLostItems> {
   Future<void> loadLostItems() async{
     final data = await DbHelper.instance.getLostItems();
 
-    data.sort((a,b) => b.lostDate.compareTo(a.lostDate));
+    data.sort((LostItems a,LostItems b) => b.lostDate.compareTo(a.lostDate));
 
     setState(() {
       lostItems = data;
@@ -195,6 +195,7 @@ class _AddLostItemsState extends State<AddLostItems> {
       lostDate: selectedDate ?? DateTime.now(),
       picture: selectedImage?.path,
       address: address,
+        status:"Lost",
     );
 
 
@@ -214,6 +215,9 @@ class _AddLostItemsState extends State<AddLostItems> {
 
 
     if(matches.isNotEmpty) {
+
+      await DbHelper.instance.updateLostStatus(matches.first.foundItem!.id!, "Matched");
+
       showDialog(
           context: context,
           builder: (_){
