@@ -24,8 +24,6 @@ import 'add_found_items.dart';
 class MapApp extends StatefulWidget{
 
 
-  // final MatchResult bestScore;
-
   const MapApp({super.key, });
 
   @override
@@ -47,6 +45,9 @@ class _MapAppState extends State<MapApp> {
     super.initState();
     loadData();
 
+    setState(() {
+
+    });
   }
 
   Future<void> loadData() async {
@@ -54,6 +55,7 @@ class _MapAppState extends State<MapApp> {
     await loadFoundItems();
 
     generateMatches();
+
   }
 
   Future<void> loadLostItems() async{
@@ -78,35 +80,39 @@ class _MapAppState extends State<MapApp> {
     });
   }
 
-  void generateMatches() async {
 
+  void generateMatches() {
     matchedResults.clear();
 
-    for(var lost in lostItems) {
+
+
+
+    for (var lost in lostItems) {
       MatchResult? bestMatch;
 
-      for(var found in foundItems){
+      for (var found in foundItems) {
+        final score = calculateMatchingScore(lost, found);
 
-        print(
-            "${lost.itemName} -> ${found.itemName} : ${calculateMatchingScore(lost, found)}"
-        );
-        final score = calculateMatchingScore(lost , found);
-
-        if(bestMatch == null || score > bestMatch.score){
-          bestMatch =MatchResult ( lostItem: lost, foundItem: found, score: score,);
-        }
-
-        if (bestMatch.score > 50) {
-          matchedResults.add(bestMatch);
+        if (bestMatch == null || score > bestMatch.score) {
+          bestMatch = MatchResult(
+            lostItem: lost,
+            foundItem: found,
+            score: score,
+          );
         }
       }
 
 
+      if (bestMatch != null && bestMatch.score >= 50) {
+        matchedResults.add(bestMatch);
+      }
     }
 
-    setState(() {
+    matchedResults.sort((a, b) => b.score.compareTo(a.score));
 
-    });
+    print("Matched Items: ${matchedResults.length}");
+
+    setState(() {});
   }
 
   int calculateMatchingScore(LostItems lost , FoundItems found) {
@@ -189,7 +195,9 @@ class _MapAppState extends State<MapApp> {
                        onPressed: () async {
                          await Navigator.push(context, MaterialPageRoute(builder: (_) => AddLostItems()));
                          await loadLostItems();
-                         //await loadFoundItems();
+                         await loadFoundItems();
+
+                         generateMatches();
                        },
                        icon:Icon(Icons.add_box_outlined,color: AppPreference.getTheme() ? Colors.white : Colors.black,size: ResponsiveSizes.value(context, mobile: 22, tablet: 30),)),
                  ],
@@ -222,7 +230,7 @@ class _MapAppState extends State<MapApp> {
              // ),
        
        
-             SizedBox(height: 10,),
+             SizedBox(height: 5,),
        
              //3rd for Found Items
        
@@ -247,6 +255,8 @@ class _MapAppState extends State<MapApp> {
        
                          await loadLostItems();
                          await loadFoundItems();
+
+                         generateMatches();
                        },
                        icon:Icon(Icons.add_box_outlined,color: AppPreference.getTheme() ? Colors.white : Colors.black,size: ResponsiveSizes.value(context, mobile: 22, tablet: 30),)),
                  ],
@@ -282,7 +292,7 @@ class _MapAppState extends State<MapApp> {
        
        
              Padding(
-                 padding: EdgeInsets.all(8),
+                 padding: EdgeInsets.all(2),
                child: SizedBox(
                  height: 160,
                  child: ListView.builder(

@@ -225,7 +225,7 @@ class _AddLostItemsState extends State<AddLostItems> {
               title: const Text("Possible Matches"),
 
               content: SizedBox(
-                height: 300,
+                height: 380,
                 width: double.infinity,
                 child: ListView.builder(
                     itemCount: matches.length,

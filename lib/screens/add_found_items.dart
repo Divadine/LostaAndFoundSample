@@ -228,7 +228,7 @@ class _AddFoundItemsState extends State<AddFoundItems> {
               title: const Text("Possible Matches"),
 
               content: SizedBox(
-                height: 300,
+                height: 380,
                 width: double.infinity,
                 child: ListView.builder(
                     itemCount: matches.length,
@@ -243,7 +243,7 @@ class _AddFoundItemsState extends State<AddFoundItems> {
                         title: Row(
                           children: [
                             Text(match.lostItem!.itemName),
-                            SizedBox(width: 7,),
+                           // SizedBox(width: 5,),
                             Text(" Score ${match.score}%"),
                           ],
                         ),
