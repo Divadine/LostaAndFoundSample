@@ -34,7 +34,7 @@ class MapLocalization extends StatelessWidget {
             return MaterialApp(
               theme: ThemeData(brightness : isDark ? Brightness.dark : Brightness.light,fontFamily: asyncSnapshot.data ?? 'Inter',),
               debugShowCheckedModeBanner: false,
-              home: MapApp(),
+              home: const MapApp(),
             );
           }
         );

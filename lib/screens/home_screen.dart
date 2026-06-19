@@ -18,14 +18,15 @@ import 'package:geocoding/geocoding.dart';
 
 import '../sharedwidget/founditems_list.dart';
 import '../sharedwidget/lostitems_lists.dart';
+import '../sharedwidget/matcheditems_list.dart';
 import 'add_found_items.dart';
 
 class MapApp extends StatefulWidget{
 
 
-  final MatchResult bestScore;
+  // final MatchResult bestScore;
 
-  const MapApp({super.key, required this.bestScore, });
+  const MapApp({super.key, });
 
   @override
   State<MapApp> createState() => _MapAppState();
@@ -40,14 +41,19 @@ class _MapAppState extends State<MapApp> {
   List<FoundItems> foundItems =[];
   List<MatchResult> matchedResults =[];
 
+
   @override
   void initState() {
     super.initState();
-    loadLostItems();
-    loadFoundItems();
+    loadData();
+
+  }
+
+  Future<void> loadData() async {
+    await loadLostItems();
+    await loadFoundItems();
+
     generateMatches();
-
-
   }
 
   Future<void> loadLostItems() async{
@@ -80,26 +86,27 @@ class _MapAppState extends State<MapApp> {
       MatchResult? bestMatch;
 
       for(var found in foundItems){
+
+        print(
+            "${lost.itemName} -> ${found.itemName} : ${calculateMatchingScore(lost, found)}"
+        );
         final score = calculateMatchingScore(lost , found);
 
         if(bestMatch == null || score > bestMatch.score){
           bestMatch =MatchResult ( lostItem: lost, foundItem: found, score: score,);
         }
 
-        if (bestMatch.score >= 50) {
+        if (bestMatch.score > 50) {
           matchedResults.add(bestMatch);
         }
       }
 
-      await loadLostItems();
-      await loadFoundItems();
-
-      setState(() {
-
-      });
-
 
     }
+
+    setState(() {
+
+    });
   }
 
   int calculateMatchingScore(LostItems lost , FoundItems found) {
@@ -274,73 +281,23 @@ class _MapAppState extends State<MapApp> {
              SizedBox(height: 8,),
        
        
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Stack(
-              children:[
-                Container(
-                height: 150,
-                width: 180,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(topLeft: Radius.circular(20),topRight: Radius.circular(20)),
-                  //image: DecorationImage(image:NetworkImage( lostItems.picture !),fit: BoxFit.cover),
-                ),
-
-                child: Column(
-                  children: [
-                    //1 st picture
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.only(topLeft: Radius.circular(10),topRight: Radius.circular(10)),
-                        child: ListView.builder(
-                          itemCount: matchedResults.length,
-                            shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            itemBuilder: (context,index){
-                            final items = matchedResults[index];
-
-                            return Image.file(File(items.foundItem?.picture  ?? ''));
-                            }),
-                      ),
-                    ),
-
-                    // 2 nd name of items
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 10,horizontal: 10),
-                      decoration: BoxDecoration(
-                        color:  AppPreference.getTheme() ? Colors.black : Colors.black.withOpacity(0.5),
-                        //borderRadius:BorderRadius.only(bottomLeft: Radius.circular(18),bottomRight: Radius.circular(18),),
-
-                      ),
-                      child: FontUtils(
-                        text:matchedResults.first.foundItem?.itemName ?? '',
-                        maxLines: 1,  //foundItems.first.itemName,
-                        textOverflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: AppTextStyle(fontWeight: FontWeight.bold,fontFamily: AppPreference.getFont(),fontSize: ResponsiveSizes.value(context, mobile: 15, tablet: 20),color: Colors.white),
-
-                      ),
-
-                    ),
-
-                  ],
-                ),
-              ),
-
-                //status
-
-                Positioned(
-                  top: 10,
-                  child: Container(
-                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(12),border: Border.all(color: Colors.red)),
-                    child: FontUtils(text: '${widget.bestScore.score}',style: AppTextStyle(color: AppPreference.getTheme() ? Colors.white : Colors.black),),
-                  ),
-                ),
-            ],
-            ),
-          ),
+             Padding(
+                 padding: EdgeInsets.all(8),
+               child: SizedBox(
+                 height: 160,
+                 child: ListView.builder(
+                   scrollDirection: Axis.horizontal,
+                     itemCount: matchedResults.length,
+                     itemBuilder: (context,index){
+                     final item = matchedResults[index];
+                     return Padding(
+                       padding: EdgeInsets.all(7),
+                       child: MatchedItemsList(matchResult: item, lostItems: item.lostItem!, foundItems: item.foundItem!,),
+                     );
+                     }
+                 ),
+               ),
+             ),
        
        
           ],
