@@ -20,48 +20,70 @@ class LostItemsLists extends StatelessWidget {
       onTap: (){
         Navigator.push(context, MaterialPageRoute(builder: (_) => LostItemsDetails(lostItems: lostItems,)));
       },
-      child: Container(
-        height: 150,
-        width: 180,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.only(topLeft: Radius.circular(20),topRight: Radius.circular(20)),
-          //image: DecorationImage(image:NetworkImage( lostItems.picture !),fit: BoxFit.cover),
-        ),
-      
-        child: Column(
-          children: [
-            // 1st widget
-            Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.only(topRight: Radius.circular(10),topLeft: Radius.circular(10)),
-                child: lostItems.picture != null ? Image.file(File(lostItems.picture!), width: double.infinity,fit: BoxFit.cover, )
-                 : Icon(Icons.broken_image,size: 40,color: Colors.grey,),
+      child: Stack(
+        children:[
+          Container(
+          height: 150,
+          width: 180,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.only(topLeft: Radius.circular(20),topRight: Radius.circular(20)),
+            //image: DecorationImage(image:NetworkImage( lostItems.picture !),fit: BoxFit.cover),
+          ),
+
+          child: Column(
+            children: [
+              // 1st widget
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.only(topRight: Radius.circular(10),topLeft: Radius.circular(10)),
+                  child: lostItems.picture != null ? Image.file(File(lostItems.picture!), width: double.infinity,fit: BoxFit.cover, )
+                   : Icon(Icons.broken_image,size: 40,color: Colors.grey,),
+                  ),
+              ),
+
+
+              //2nd widget
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 10,horizontal: 10),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.5),
+                  borderRadius:BorderRadius.only(bottomLeft: Radius.circular(18),bottomRight: Radius.circular(18),),
+
                 ),
-            ),
+                child: FontUtils(
+                  text: lostItems.itemName,
+                  maxLines: 1,
+                  textOverflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyle(fontWeight: FontWeight.bold,fontFamily: AppPreference.getFont(),fontSize: ResponsiveSizes.value(context, mobile: 15, tablet: 20),color: Colors.white),
 
+                ),
 
-            //2nd widget
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 10,horizontal: 10),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.5),
-                borderRadius:BorderRadius.only(bottomLeft: Radius.circular(18),bottomRight: Radius.circular(18),),
-      
               ),
-              child: FontUtils(
-                text: lostItems.itemName,
-                maxLines: 1,
-                textOverflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: AppTextStyle(fontWeight: FontWeight.bold,fontFamily: AppPreference.getFont(),fontSize: ResponsiveSizes.value(context, mobile: 15, tablet: 20),color: Colors.white),
-      
-              ),
-      
-            ),
-      
-          ],
+
+            ],
+          ),
         ),
+
+
+          Positioned(
+            top: 10,
+            child: Container(
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(12),border: Border.all(color: Colors.red)),
+              child: FontUtils(text: lostItems.status ?? '',style: AppTextStyle(color: AppPreference.getTheme() ? Colors.white : Colors.black),),
+            ),
+          ),
+
+          // Positioned(
+          //   top: 10,
+          //   right: 10,
+          //   child: Container(
+          //     decoration: BoxDecoration(borderRadius: BorderRadius.circular(12),border: Border.all(color: Colors.red)),
+          //     child: FontUtils(text: lostItems.score ?? '',style: AppTextStyle(color: AppPreference.getTheme() ? Colors.white : Colors.black),),
+          //   ),
+          // ),
+      ]
       ),
     );
   }

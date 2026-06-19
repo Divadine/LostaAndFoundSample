@@ -23,8 +23,9 @@ import 'add_found_items.dart';
 class MapApp extends StatefulWidget{
 
 
+  final MatchResult bestScore;
 
-  const MapApp({super.key, });
+  const MapApp({super.key, required this.bestScore, });
 
   @override
   State<MapApp> createState() => _MapAppState();
@@ -37,12 +38,16 @@ class _MapAppState extends State<MapApp> {
 
   List<LostItems> lostItems = [];
   List<FoundItems> foundItems =[];
+  List<MatchResult> matchedResults =[];
 
   @override
   void initState() {
     super.initState();
     loadLostItems();
     loadFoundItems();
+    generateMatches();
+
+
   }
 
   Future<void> loadLostItems() async{
@@ -67,6 +72,69 @@ class _MapAppState extends State<MapApp> {
     });
   }
 
+  void generateMatches() async {
+
+    matchedResults.clear();
+
+    for(var lost in lostItems) {
+      MatchResult? bestMatch;
+
+      for(var found in foundItems){
+        final score = calculateMatchingScore(lost , found);
+
+        if(bestMatch == null || score > bestMatch.score){
+          bestMatch =MatchResult ( lostItem: lost, foundItem: found, score: score,);
+        }
+
+        if (bestMatch.score >= 50) {
+          matchedResults.add(bestMatch);
+        }
+      }
+
+      await loadLostItems();
+      await loadFoundItems();
+
+      setState(() {
+
+      });
+
+
+    }
+  }
+
+  int calculateMatchingScore(LostItems lost , FoundItems found) {
+
+    int score = 0;
+
+    if(lost.categoryType.toLowerCase() == found.categoryType.toLowerCase()){
+      score += 30;
+    }
+
+    if(lost.itemName.toLowerCase().contains(found.itemName.toLowerCase()) || found.itemName.toLowerCase().contains(lost.itemName.toLowerCase())){
+      score += 30;
+    }
+
+    int dayDifference = lost.lostDate.difference(found.foundDate).inDays.abs();
+
+    if(dayDifference <= 7) {
+      score += 20;
+    }
+
+    double latDiff = (found.location.latitude - lost.location.latitude).abs();
+    double logDiff = (found.location.longitude - lost.location.longitude).abs();
+
+    if(latDiff < 0.02 && logDiff < 0.02){
+      score += 20;
+    }
+
+    // if(score > 50){
+    //   matchedResults.add(MatchResult(lostItem: lost, score: score  ,foundItem: found));
+    // }
+    matchedResults.sort((a,b) => b.score.compareTo(a.score));
+
+    return score;
+  }
+
 
 
   @override
@@ -74,8 +142,6 @@ class _MapAppState extends State<MapApp> {
     return Scaffold(
       drawer: SettingsScreen(),
       appBar: AppBar(
-
-
         leading:Builder(
             builder: (context){
               return IconButton(onPressed: (){
@@ -86,6 +152,7 @@ class _MapAppState extends State<MapApp> {
         centerTitle: true,
         backgroundColor: AppPreference.getTheme() ? Colors.black : AppColor.defaultColor,
       ),
+
 
      body: SingleChildScrollView(
        child: Padding(
@@ -130,16 +197,16 @@ class _MapAppState extends State<MapApp> {
                  final lostItem = lostItems[index];
                  return Padding(
                      padding: EdgeInsets.all(7),
-                     child: LostItemsLists(lostItems: lostItem));
+                     child: LostItemsLists(lostItems: lostItem) );
                }),
              ),
        
-       
+             //
              // SingleChildScrollView(
              //     scrollDirection: Axis.horizontal,
              //     child:Row(
              //         mainAxisAlignment: MainAxisAlignment.start,
-       
+             //
              //       children: List.generate(lostItems.length, (index) => Padding(
              //         padding: EdgeInsets.all(7),
              //         child: LostItemsLists(lostItems: lostItems[index])),
@@ -209,55 +276,69 @@ class _MapAppState extends State<MapApp> {
        
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Container(
-              height: 150,
-              width: 180,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(topLeft: Radius.circular(20),topRight: Radius.circular(20)),
-                //image: DecorationImage(image:NetworkImage( lostItems.picture !),fit: BoxFit.cover),
+            child: Stack(
+              children:[
+                Container(
+                height: 150,
+                width: 180,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(topLeft: Radius.circular(20),topRight: Radius.circular(20)),
+                  //image: DecorationImage(image:NetworkImage( lostItems.picture !),fit: BoxFit.cover),
+                ),
+
+                child: Column(
+                  children: [
+                    //1 st picture
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.only(topLeft: Radius.circular(10),topRight: Radius.circular(10)),
+                        child: ListView.builder(
+                          itemCount: matchedResults.length,
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemBuilder: (context,index){
+                            final items = matchedResults[index];
+
+                            return Image.file(File(items.foundItem?.picture  ?? ''));
+                            }),
+                      ),
+                    ),
+
+                    // 2 nd name of items
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 10,horizontal: 10),
+                      decoration: BoxDecoration(
+                        color:  AppPreference.getTheme() ? Colors.black : Colors.black.withOpacity(0.5),
+                        //borderRadius:BorderRadius.only(bottomLeft: Radius.circular(18),bottomRight: Radius.circular(18),),
+
+                      ),
+                      child: FontUtils(
+                        text:matchedResults.first.foundItem?.itemName ?? '',
+                        maxLines: 1,  //foundItems.first.itemName,
+                        textOverflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: AppTextStyle(fontWeight: FontWeight.bold,fontFamily: AppPreference.getFont(),fontSize: ResponsiveSizes.value(context, mobile: 15, tablet: 20),color: Colors.white),
+
+                      ),
+
+                    ),
+
+                  ],
+                ),
               ),
 
-              child: Column(
-                children: [
-                  //1 st picture
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.only(topLeft: Radius.circular(10),topRight: Radius.circular(10)),
-                      child: ListView.builder(
-                        itemCount: foundItems.length,
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          itemBuilder: (context,index){
-                          final items = foundItems[index];
+                //status
 
-                          return Image.file(File(items.picture  ?? ''));
-                          }),
-                    ),
+                Positioned(
+                  top: 10,
+                  child: Container(
+                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(12),border: Border.all(color: Colors.red)),
+                    child: FontUtils(text: '${widget.bestScore.score}',style: AppTextStyle(color: AppPreference.getTheme() ? Colors.white : Colors.black),),
                   ),
-
-                  // 2 nd name of items
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 10,horizontal: 10),
-                    decoration: BoxDecoration(
-                      color:  AppPreference.getTheme() ? Colors.black : Colors.black.withOpacity(0.5),
-                      //borderRadius:BorderRadius.only(bottomLeft: Radius.circular(18),bottomRight: Radius.circular(18),),
-
-                    ),
-                    child: FontUtils(
-                      text:foundItems.first.itemName,
-                      maxLines: 1,  //foundItems.first.itemName,
-                      textOverflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: AppTextStyle(fontWeight: FontWeight.bold,fontFamily: AppPreference.getFont(),fontSize: ResponsiveSizes.value(context, mobile: 15, tablet: 20),color: Colors.white),
-
-                    ),
-
-                  ),
-
-                ],
-              ),
+                ),
+            ],
             ),
           ),
        

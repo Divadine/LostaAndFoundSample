@@ -142,7 +142,7 @@ class _AddLostItemsState extends State<AddLostItems> {
       print("Category +30");
 
       if(found.itemName.toLowerCase().contains(lostItems.itemName.toLowerCase()) || lostItems.itemName.toLowerCase().contains(found.itemName.toLowerCase())){
-        score +=30;
+        score += 30;
       }
       print("Name +30");
 
@@ -240,18 +240,18 @@ class _AddLostItemsState extends State<AddLostItems> {
                         title: Row(
                           children: [
                             Text(match.foundItem!.itemName),
-                            SizedBox(width: 7,),
+                            //  SizedBox(width: 7,),
                             Text(" Score ${match.score}%"),
                           ],
                         ),
 
-                        subtitle: Text(
-                          '${getDateLabel(item.lostDate)} • ${formatTime(item.lostDate)}'
-                              '${item.lostDate.hour}:${item.lostDate.minute.toString().padLeft(2, '0')}',
-                           // " Score ${match.score}%"
-                        ),
+                        // subtitle: Text(
+                        //   '${getDateLabel(item.lostDate)} • ${formatTime(item.lostDate)}'
+                        //       '${item.lostDate.hour}:${item.lostDate.minute.toString().padLeft(2, '0')}',
+                        //    // " Score ${match.score}%"
+                        // ),
 
-                        trailing: Text(match.foundItem!.address!) ,
+                        trailing: Text(match.foundItem!.address!),
                       );
                     }
                 ),
