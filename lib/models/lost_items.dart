@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -30,6 +31,25 @@ class LostItems {
     );
   }
 
+  //firestore
+  factory LostItems.fromFirestore(DocumentSnapshot doc) {
+   // final json = doc.data() as Map<String, dynamic>;
+    final json = doc.data() as Map<String , dynamic>;
+
+    final GeoPoint point = json['location'];
+
+    return LostItems(
+      itemName: json['itemName'],
+      description: json['description'],
+      categoryType: json['categoryType'],
+      lostDate: (json['lostDate'] as Timestamp).toDate(),
+      location: LatLng(point.latitude, point.longitude),
+      picture: json['picture'],
+      address: json['address'],
+      status: json['status'],
+    );
+  }
+
   Map<String,dynamic> toMap() {
     return {
       'id':id,
@@ -43,6 +63,25 @@ class LostItems {
       'address' : address,
       'status':status,
       //'location':location,
+    };
+  }
+
+  //firestore
+  //
+  Map<String, dynamic> toFirestore() {
+    return {
+      'itemName': itemName,
+      'description': description,
+      'categoryType': categoryType,
+      'lostDate': Timestamp.fromDate(lostDate),
+      'location': GeoPoint(
+        location.latitude,
+        location.longitude,
+      ),
+      'picture': picture,
+      'address': address,
+      'status': status,
+      'createdAt': FieldValue.serverTimestamp(),
     };
   }
 }

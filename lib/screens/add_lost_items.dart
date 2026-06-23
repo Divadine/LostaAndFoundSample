@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
@@ -12,7 +13,8 @@ import '../utils/color_utils.dart';
 import '../utils/font_utils.dart';
 import '../utils/tab_mobile_size.dart';
 import 'map_screen.dart';
-
+import '../service/firebase_service.dart';
+import 'dart:convert';
 class AddLostItems extends StatefulWidget {
   const AddLostItems({super.key});
 
@@ -22,6 +24,7 @@ class AddLostItems extends StatefulWidget {
 
 class _AddLostItemsState extends State<AddLostItems> {
 
+  final FirebaseService firebase = FirebaseService();
   LatLng? selectedLocation;
   DateTime? selectedDate;
   File? selectedImage;
@@ -172,8 +175,26 @@ class _AddLostItemsState extends State<AddLostItems> {
     return matches;
   }
 
+  Future<String> imageToBase64(File imageFile) async {
+    final bytes = await FlutterImageCompress.compressWithFile(imageFile.absolute.path,quality: 40,minHeight: 600,minWidth: 600);
+
+    if (bytes == null) {
+      throw Exception('Image compression failed');
+    }
+    return base64Encode(bytes);
+  }
+
+
 
   void onSubmit() async {
+
+    String imageBase64= '';
+
+    if(selectedImage != null){
+
+      imageBase64 = await imageToBase64(selectedImage!);
+
+    }
 
     if(itemNameCtrl.text.isEmpty || descriptionCtrl.text.isEmpty || categoryCtrl.text.isEmpty || selectedLocation == null ||  selectedDate == null ){
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: FontUtils(text: 'Please check all the fields',style: AppTextStyle(fontWeight: FontWeight.bold,fontFamily: AppPreference.getFont(),fontSize: ResponsiveSizes.value(context, mobile: 18 , tablet: 25)),)));
@@ -193,14 +214,16 @@ class _AddLostItemsState extends State<AddLostItems> {
       categoryType: categoryCtrl.text,
       location:selectedLocation!,
       lostDate: selectedDate ?? DateTime.now(),
-      picture: selectedImage?.path,
+      picture: imageBase64,
       address: address,
         status:"Lost",
     );
 
 
 
-    await DbHelper.instance.insertLostItems(item);
+    await firebase.addLostItems(item);
+
+    //await DbHelper.instance.insertLostItems(item);
 
     final foundItems = await DbHelper.instance.getFoundItems();
 
@@ -216,47 +239,91 @@ class _AddLostItemsState extends State<AddLostItems> {
 
     if(matches.isNotEmpty) {
 
-      await DbHelper.instance.updateLostStatus(matches.first.foundItem!.id!, "Matched");
+      await DbHelper.instance.updateLostStatus(item.id!, "Matched");  //matches.first.foundItem!.id!
 
       showDialog(
           context: context,
           builder: (_){
             return AlertDialog(
               title: const Text("Possible Matches"),
-
               content: SizedBox(
+                width: double.maxFinite,
                 height: 380,
-                width: double.infinity,
                 child: ListView.builder(
-                    itemCount: matches.length,
-                    shrinkWrap: true,
-                    itemBuilder: (context,index){
-                      final match = matches[index];
-                      return ListTile(
-                        leading: SizedBox(height: 50,width: 50,
-                          child: match.foundItem?.picture != null &&  File(match.foundItem!.picture!).existsSync() ? Image.file(File(match.foundItem!.picture!),fit: BoxFit.cover,) : const Icon(Icons.image),
-                        ),
+                  itemCount: matches.length,
+                  itemBuilder: (context, index) {
+                    final match = matches[index];
 
-                        title: Row(
-                          children: [
-                            Text(match.foundItem!.itemName),
-                            //  SizedBox(width: 7,),
-                            Text(" Score ${match.score}%"),
-                          ],
-                        ),
+                    return ListTile(
+                      leading: SizedBox(
+                        width: 50,
+                        height: 50,
+                        child: match.foundItem?.picture != null &&
+                            File(match.foundItem!.picture!).existsSync()
+                            ? Image.memory(base64Decode(match.foundItem!.picture!),
+                          //File(match.foundItem!.picture!),
+                          fit: BoxFit.cover,
+                        )
+                            : const Icon(Icons.image),
+                      ),
 
-                        // subtitle: Text(
-                        //   '${getDateLabel(item.lostDate)} • ${formatTime(item.lostDate)}'
-                        //       '${item.lostDate.hour}:${item.lostDate.minute.toString().padLeft(2, '0')}',
-                        //    // " Score ${match.score}%"
-                        // ),
+                      title: Text(
+                        match.foundItem!.itemName,
+                        overflow: TextOverflow.ellipsis,
+                      ),
 
-                        trailing: Text(match.foundItem!.address!),
-                      );
-                    }
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("Score: ${match.score}%"),
+                          Text(
+                            match.foundItem?.address ?? "",
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 2,
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-              ) ,
+              ),
             );
+            //   AlertDialog(
+            //   title: const Text("Possible Matches"),
+            //
+            //   content: SizedBox(
+            //     height: 380,
+            //     width: double.infinity,
+            //     child: ListView.builder(
+            //         itemCount: matches.length,
+            //         //shrinkWrap: true,
+            //         itemBuilder: (context,index){
+            //           final match = matches[index];
+            //           return ListTile(
+            //             leading: SizedBox(height: 50,width: 50,
+            //               child: match.foundItem?.picture != null &&  File(match.foundItem!.picture!).existsSync() ? Image.file(File(match.foundItem!.picture!),fit: BoxFit.cover,) : const Icon(Icons.image),
+            //             ),
+            //
+            //             title: Row(
+            //               children: [
+            //                 Text(match.foundItem!.itemName),
+            //                 //  SizedBox(width: 7,),
+            //                 Text(" Score ${match.score}%"),
+            //               ],
+            //             ),
+            //
+            //             // subtitle: Text(
+            //             //   '${getDateLabel(item.lostDate)} • ${formatTime(item.lostDate)}'
+            //             //       '${item.lostDate.hour}:${item.lostDate.minute.toString().padLeft(2, '0')}',
+            //             //    // " Score ${match.score}%"
+            //             // ),
+            //
+            //             trailing: Text(match.foundItem!.address!),
+            //           );
+            //         }
+            //     ),
+            //   ) ,
+            // );
           }
       );
     }

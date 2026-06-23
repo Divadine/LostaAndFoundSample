@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
@@ -9,6 +11,7 @@ import '../database/db.dart';
 import '../models/found_items.dart';
 import '../models/lost_items.dart';
 import '../models/match_results.dart';
+import '../service/firebase_service.dart';
 import '../sharedpreference/shared_preference.dart';
 import '../utils/color_utils.dart';
 import '../utils/font_utils.dart';
@@ -24,6 +27,7 @@ class AddFoundItems extends StatefulWidget {
 
 class _AddFoundItemsState extends State<AddFoundItems> {
 
+  final FirebaseService firebase = FirebaseService();
   LatLng? selectedLocation;
   DateTime? selectedDate;
   File? selectedImage;
@@ -175,9 +179,26 @@ class _AddFoundItemsState extends State<AddFoundItems> {
   }
 
 
+  Future<String> imageToBase64(File imageFile) async {
+    final bytes = await FlutterImageCompress.compressWithFile(imageFile.absolute.path,quality: 40,minHeight: 600,minWidth: 600);
+
+    if (bytes == null) {
+      throw Exception('Image compression failed');
+    }
+    return base64Encode(bytes);
+  }
+
+
   void onSubmit() async {
 
 
+    String imageBase64= '';
+
+    if(selectedImage != null){
+
+      imageBase64 = await imageToBase64(selectedImage!);
+
+    }
 
     if(itemNameCtrl.text.isEmpty || descriptionCtrl.text.isEmpty || categoryCtrl.text.isEmpty || selectedLocation == null ||  selectedDate == null ){
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: FontUtils(text: 'Please check all the fields',style: AppTextStyle(fontWeight: FontWeight.bold,fontFamily: AppPreference.getFont(),fontSize: ResponsiveSizes.value(context, mobile: 18 , tablet: 25)),)));
@@ -195,14 +216,15 @@ class _AddFoundItemsState extends State<AddFoundItems> {
       categoryType: categoryCtrl.text,
       location:selectedLocation!,
       foundDate: selectedDate ?? DateTime.now(),
-      picture: selectedImage?.path,
+      picture: imageBase64,
       address: address,
         status:'Found',
     );
 
 
+    await firebase.addFoundItems(item);
 
-    await DbHelper.instance.insertFoundItems(item);
+    //await DbHelper.instance.insertFoundItems(item);
 
     final lostItems = await DbHelper.instance.getLostItems();
 
@@ -215,6 +237,8 @@ class _AddFoundItemsState extends State<AddFoundItems> {
 
     print("Matches Count: ${matches.length}");
 
+
+    if(matches.isEmpty) return;
 
     if(matches.isNotEmpty) {
 
@@ -237,13 +261,15 @@ class _AddFoundItemsState extends State<AddFoundItems> {
                       final match = matches[index];
                       return ListTile(
                         leading: SizedBox(height: 50,width: 50,
-                          child: match.lostItem?.picture != null && File(match.lostItem!.picture!).existsSync() ? Image.file(File(match.lostItem!.picture!),fit: BoxFit.cover,): const Icon(Icons.image),
+                          child: match.lostItem?.picture != null && File(match.lostItem!.picture!).existsSync() ?
+                          Image.memory(base64Decode(match.foundItem!.picture!),fit: BoxFit.cover,): const Icon(Icons.image),
                         ),
 
                         title: Row(
                           children: [
-                            Text(match.lostItem!.itemName),
-                           // SizedBox(width: 5,),
+                            Expanded(child: Text(match.lostItem!.itemName),),
+                            //Text(match.lostItem!.itemName),
+                            SizedBox(width: 5,),
                             Text(" Score ${match.score}%"),
                           ],
                         ),

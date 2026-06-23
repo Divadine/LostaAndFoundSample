@@ -1,12 +1,15 @@
 import 'dart:async';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:map_initialization/firebase_options.dart';
 import 'package:map_initialization/screens/home_screen.dart';
 import 'package:map_initialization/sharedpreference/shared_preference.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
 
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await AppPreference.init();
   runApp( MapLocalization());
 }
